@@ -32,29 +32,25 @@ router.post('/sign-up', async (req, res) => {
 
 router.post('/sign-in', async (req, res) => {
   try {
-    const { username, password } = req.body;
-    const userInDatabase = await User.findOne({ username });
+    const { identifier, password } = req.body;
+    
+    const user = await User.findOne({ 
+      $or: [{ username: identifier }, { email: identifier }]
+     });
 
-    // if the user does not exist, redirect to sign up with msg
-    if (!userInDatabase) {
+    if (!user) {
       return res.status(401).json({ err: 'Invalid Credentials' });
     }
 
-    const isValidPassword = bcrypt.compareSync(password, userInDatabase.password);
-
-    // if the pw doesnt match, throw an error
-    if (!isValidPassword) {
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
       return res.status(401).json({ err: 'Invalid Credentials' });
     }
 
-    const payload = {
-      username: userInDatabase.username,
-      _id: userInDatabase._id,
-    };
-
+    const payload = { username: user.username,_id: user._id};
     const token = jwt.sign({ payload }, process.env.JWT_SECRET);
 
-    res.status(200).json({ token });
+    res.status(200).json({ token, user });
   } catch (err) {
     console.log(err);
 
