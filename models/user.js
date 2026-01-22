@@ -1,29 +1,32 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
-const userSchema = mongoose.Schema({
+const userSchema = new mongoose.Schema({
 
   username: {
     type: String,
-    required: true,
+    required: [true, 'Username is required'],
     unique: true,
     trim: true
   },
 
   email: {
     type: String,
-    required: true,
+    required: [true, 'Email is required'],
     unique: true,
+    lowercase: true,
+    match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please provide a valid email address']
   },
 
   password: {
     type: String,
-    required: true,
+    required: [true, 'Password is required'],
   },
 
   masterPin: {
     type: String,
-    required: true,
+    required: [true, 'MasterPIN is required'],
+    match: [/^\d{4,6}$/, 'MasterPIN must be between 4 and 6 digits (numbers only)'],
   },
 
   bio: {
@@ -45,6 +48,9 @@ const userSchema = mongoose.Schema({
      type: String,
     default: "",
   },
+},
+{
+  timestamps: true
 });
 
 userSchema.pre('save', async function (next) {
@@ -61,8 +67,17 @@ userSchema.set('toJSON', {
   transform: (document, returnedObject) => {
     delete returnedObject.password;
     delete returnedObject.masterPin;
+    return returnedObject;
   },
 });
+
+userSchema.methods.comparePassword = function (candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
+
+userSchema.methods.comparePin = function (candidatePin) {
+  return bcrypt.compare(candidatePin, this.masterPin);
+};
 
 
 const User = mongoose.model('User', userSchema);
