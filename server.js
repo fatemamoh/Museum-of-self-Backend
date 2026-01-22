@@ -10,6 +10,7 @@ const logger = require('morgan');
 
 // Controllers
 const authCtrl = require('./controllers/auth');
+const userCtrl = require('./controllers/users')
 
 // Middleware
 const verifyToken = require('./middleware/verify-token');
@@ -29,10 +30,11 @@ app.use('/auth', authCtrl);
 
 // Protected Routes
 app.use(verifyToken);
+app.use('/users', userCtrl);
 
 app.get('/test', (req, res) => {
-  console.log(req.user);
-  res.status(200).json({ message: 'you are logged in!' });
+  res.status(200).json({ message: 'Authentication successful', 
+  user: req.user });
 });
 
 app.listen(process.env.PORT || 3000, () => {
