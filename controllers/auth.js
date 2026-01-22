@@ -33,7 +33,7 @@ router.post('/sign-up', async (req, res) => {
 router.post('/sign-in', async (req, res) => {
   try {
     const { identifier, password } = req.body;
-    
+
     const user = await User.findOne({ 
       $or: [{ username: identifier }, { email: identifier }]
      });
@@ -52,8 +52,6 @@ router.post('/sign-in', async (req, res) => {
 
     res.status(200).json({ token, user });
   } catch (err) {
-    console.log(err);
-
     res.status(500).json({ err: err.message });
   }
 });
