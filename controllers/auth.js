@@ -3,14 +3,14 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
-router.post('/sign-up', async (req, res) => {
+router.post('/sign-up', async (req, res, next) => {
   try {
     const { username, email, password, masterPin } = req.body;
     
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
     if (!passwordRegex.test(password)) {
       return res.status(400).json({ 
-        err: 'Password must be 8+ characters, include an uppercase letter and a number.' 
+        err: 'Password must be at least 8 characters long and include both a letter and a number.' 
       });
     }
 
@@ -21,7 +21,14 @@ router.post('/sign-up', async (req, res) => {
 
     const user = await User.create(req.body);
 
-    const payload = {username: user.username,_id: user._id,};
+    const payload = { 
+      username: user.username, 
+      _id: user._id,
+      bio: user.bio,
+      location: user.location,
+      avatarUrl: user.avatarUrl
+
+    };
     const token = jwt.sign({ payload }, process.env.JWT_SECRET);
 
     res.status(201).json({ token, user });
@@ -30,13 +37,13 @@ router.post('/sign-up', async (req, res) => {
   }
 });
 
-router.post('/sign-in', async (req, res) => {
+router.post('/sign-in', async (req, res, next) => {
   try {
     const { identifier, password } = req.body;
 
     const user = await User.findOne({ 
       $or: [{ username: identifier }, { email: identifier }]
-     });
+    });
 
     if (!user) {
       return res.status(401).json({ err: 'Invalid Credentials' });
@@ -47,7 +54,7 @@ router.post('/sign-in', async (req, res) => {
       return res.status(401).json({ err: 'Invalid Credentials' });
     }
 
-    const payload = { username: user.username,_id: user._id};
+    const payload = { username: user.username, _id: user._id };
     const token = jwt.sign({ payload }, process.env.JWT_SECRET);
 
     res.status(200).json({ token, user });
