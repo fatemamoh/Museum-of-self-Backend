@@ -67,6 +67,7 @@ userSchema.set('toJSON', {
   transform: (document, returnedObject) => {
     delete returnedObject.password;
     delete returnedObject.masterPin;
+    delete returnedObject.avatarPublicId;
     return returnedObject;
   },
 });
