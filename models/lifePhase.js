@@ -33,5 +33,13 @@ const lifePhaseSchema = new mongoose.Schema({
 }, { timestamps: true }
 );
 
+lifePhaseSchema.pre('save', function (next) {
+    if (this.endDate && this.startDate > this.endDate) {
+        const err = new Error("The exhibition cannot end before it begins.");
+        next(err);
+    }
+    next();
+});
+
 const LifePhase = mongoose.model('LifePhase', lifePhaseSchema);
 module.exports = LifePhase
