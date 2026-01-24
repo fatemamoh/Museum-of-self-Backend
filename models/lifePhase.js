@@ -9,8 +9,20 @@ const lifePhaseSchema = new mongoose.Schema({
     },
     summary: {
         type: String,
-        required: [true, "A Curator's Statment is required to open this room."],
-        minlength: 20
+        trim: true,
+        required: [
+            function () { return this.endDate != null; },
+            "A Curator's Statement is required once an exhibition has ended."
+        ],
+        validate: {
+            validator: function (v) {
+                if (this.endDate != null) {
+                    return v && v.length >= 20;
+                }
+                return true;
+            },
+            message: "The summary must be at least 20 characters long to finalize this record."
+        }
     },
     startDate: {
         type: Date,
@@ -30,16 +42,15 @@ const lifePhaseSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     }
-}, { timestamps: true }
-);
+}, { timestamps: true });
 
-lifePhaseSchema.pre('save', function (next) {
-    if (this.endDate && this.startDate > this.endDate) {
-        const err = new Error("The exhibition cannot end before it begins.");
-        next(err);
+lifePhaseSchema.pre('save', function () {
+    if (this.endDate && this.startDate) {
+        if (new Date(this.startDate) > new Date(this.endDate)) {
+    throw new Error("The exhibition cannot end before it begins.");
+        }
     }
-    next();
 });
 
 const LifePhase = mongoose.model('LifePhase', lifePhaseSchema);
-module.exports = LifePhase
+module.exports = LifePhase;
