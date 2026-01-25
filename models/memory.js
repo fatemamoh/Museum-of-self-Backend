@@ -24,6 +24,11 @@ const memorySchema = new mongoose.Schema({
         required: function () { return this.type !== 'Text' }
     },
 
+    cloudinaryPublicId: {
+        type: String,
+        default: null
+    },
+    
     story: {
         type: String
     },
