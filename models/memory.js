@@ -24,6 +24,14 @@ contentUrl:{
     required: function() {return this.type!== 'Text'}
 },
 
+story:{
+    type:String
+},
+curatorNote:{
+    type:String,
+    maxlength: 150
+},
+
 }, {timestamps: true}); 
 const Memory = mongoose.model('Memory', memorySchema);
 
