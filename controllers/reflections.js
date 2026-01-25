@@ -16,7 +16,7 @@ router.post('/:memoryId', async (req, res) => {
         if (memory.isVaulted) {
             const providedPin = req.headers['x-master-pin'];
             if (!providedPin) return res.status(401).json({ err: "Vault access denied. PIN required." });
-            
+
             const user = await User.findById(req.user._id);
             const isMatch = await user.comparePin(providedPin);
             if (!isMatch) return res.status(401).json({ err: "Vault access denied." });
@@ -73,7 +73,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // update one reflection
-router.put('/:id', async (req, res) => {
+router.put('/:id', verifyVault, async (req, res) => {
     try {
         const reflection = await Reflection.findById(req.params.id);
         if (!reflection || !reflection.user.equals(req.user._id)) {
@@ -91,8 +91,8 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// delete reflection
-router.delete('/:id', async (req, res) => {
+// delete reflection 
+router.delete('/:id', verifyVault, async (req, res) => {
     try {
         const reflection = await Reflection.findById(req.params.id);
         if (!reflection || !reflection.user.equals(req.user._id)) {
