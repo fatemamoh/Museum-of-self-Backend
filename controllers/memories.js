@@ -43,7 +43,19 @@ router.get('/phase/:phaseId', async (req, res) => {
 });
 
 // get one memory
+router.get('/:id', async (req, res) => {
+    try {
+        const memory = await Memory.findById(req.params.id);
+        if (!memory || !memory.user.equals(req.user._id)) {
+            return res.status(404).json({ err: 'Artifact not found.' });
+        }
+        res.status(200).json(memory);
+    } catch (error) {
+        res.status(500).json({ err: error.message });
+    }
+});
 
+// update memory
 router.put('/:id', upload.single('file'), async (req, res) => {
     try {
         const memory = await Memory.findById(req.params.id);
@@ -68,5 +80,6 @@ router.put('/:id', upload.single('file'), async (req, res) => {
         res.status(500).json({ err: error.message });
     }
 });
+
 
 module.exports = router;

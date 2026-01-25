@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const LifePhase = require('../models/lifePhase');
 
+// create lifephase
 router.post('/', async (req, res) => {
     try {
         req.body.user = req.user._id;
@@ -12,6 +13,7 @@ router.post('/', async (req, res) => {
     }
 });
 
+// get all lifephases
 router.get('/', async (req, res) => {
     try {
         const lifePhases = await LifePhase.find({ user: req.user._id })
@@ -22,6 +24,7 @@ router.get('/', async (req, res) => {
     }
 });
 
+// update lifephase
 router.put('/:id', async (req, res) => {
     try {
         const lifePhase = await LifePhase.findById(req.params.id);
@@ -41,7 +44,7 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-
+// delete lifephase
 router.delete('/:id', async (req, res) => {
     try {
         const lifePhase = await LifePhase.findById(req.params.id);
