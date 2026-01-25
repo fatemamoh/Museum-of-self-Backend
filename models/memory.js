@@ -42,6 +42,17 @@ const memorySchema = new mongoose.Schema({
         ],
         default: 'Ordinary'
     },
+
+    origin:{
+        type: String,
+        enum:[
+            'Self-Made', 'Gifted', 'Rediscovered', 'Snapshot', 'Shared',
+            'Found', 'Hand-Me-Down', 'Collection', 'Soundtrack', 'Message',
+            'Screen-Grab', 'Recording', 'Thought', 'Witnessed', 'Lesson',
+            'Souvenir', 'Milestone', 'Habit'
+        ],
+        default:'Self-Made'
+    },
 }, { timestamps: true });
 const Memory = mongoose.model('Memory', memorySchema);
 
