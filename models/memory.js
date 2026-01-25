@@ -53,6 +53,21 @@ const memorySchema = new mongoose.Schema({
         ],
         default:'Self-Made'
     },
+
+    capturedDate:{
+        type:Date,
+        required:[true, "The date of this occurrece is required for the timeline"]
+    },
+
+    isVaulted:{
+        type: Boolean,
+        default: false
+    },
+    unlockedDate:{
+        type:Date,
+        default: null
+    },
+
 }, { timestamps: true });
 const Memory = mongoose.model('Memory', memorySchema);
 
