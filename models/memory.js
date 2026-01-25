@@ -43,30 +43,41 @@ const memorySchema = new mongoose.Schema({
         default: 'Ordinary'
     },
 
-    origin:{
+    origin: {
         type: String,
-        enum:[
+        enum: [
             'Self-Made', 'Gifted', 'Rediscovered', 'Snapshot', 'Shared',
             'Found', 'Hand-Me-Down', 'Collection', 'Soundtrack', 'Message',
             'Screen-Grab', 'Recording', 'Thought', 'Witnessed', 'Lesson',
             'Souvenir', 'Milestone', 'Habit'
         ],
-        default:'Self-Made'
+        default: 'Self-Made'
     },
 
-    capturedDate:{
-        type:Date,
-        required:[true, "The date of this occurrece is required for the timeline"]
+    capturedDate: {
+        type: Date,
+        required: [true, "The date of this occurrece is required for the timeline"]
     },
 
-    isVaulted:{
+    isVaulted: {
         type: Boolean,
         default: false
     },
-    unlockedDate:{
-        type:Date,
+    unlockedDate: {
+        type: Date,
         default: null
     },
+    phase: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'LifePhase',
+        required: true
+    },
+
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    }
 
 }, { timestamps: true });
 const Memory = mongoose.model('Memory', memorySchema);
