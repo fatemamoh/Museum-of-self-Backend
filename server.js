@@ -19,7 +19,6 @@ const reflectionCtrl = require('./controllers/reflections');
 const verifyToken = require('./middleware/verify-token');
 
 mongoose.connect(process.env.MONGODB_URI);
-
 mongoose.connection.on('connected', () => {
   console.log(`Connected to MongoDB ${mongoose.connection.name}.`);
 });
@@ -37,11 +36,6 @@ app.use('/users', userCtrl);
 app.use('/lifePhases', lifePhaseCtrl);
 app.use('/memories', memoryCtrl);
 app.use('/reflections', reflectionCtrl);
-
-app.get('/test', (req, res) => {
-  res.status(200).json({ message: 'Authentication successful', 
-  user: req.user });
-});
 
 app.listen(process.env.PORT || 3000, () => {
   console.log('The express app is ready!');

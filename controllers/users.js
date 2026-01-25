@@ -58,7 +58,7 @@ router.delete('/profile', async (req, res) => {
   }
 });
 
-router.put('resetVaultPin', async (req, res) => {
+router.put('/resetVaultPin', async (req, res) => {
   try {
     const { password, newMasterPin } = req.body;
     const user = await User.findById(req.user._id);
