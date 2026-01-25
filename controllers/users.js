@@ -68,6 +68,7 @@ router.put('/resetVaultPin', async (req, res) => {
 
     user.masterPin = newMasterPin;
     await user.save();
+    res.status(200).json({ message: "Vault PIN successfully updated." });
   } catch (error) {
     res.status(500).json({ err: error.message });
   }
