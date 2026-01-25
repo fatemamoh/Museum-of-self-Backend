@@ -10,7 +10,7 @@ const memorySchema = new mongoose.Schema({
 
     type: {
         type: String,
-        enum: ['Text', 'Image', 'Video', 'Audio', , 'Link'],
+        enum: ['Text', 'Image', 'Video', 'Audio', 'Link'],
         default: 'Text'
     },
 
@@ -63,7 +63,7 @@ const memorySchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    unlockedDate: {
+    unlockDate: {
         type: Date,
         default: null
     },
