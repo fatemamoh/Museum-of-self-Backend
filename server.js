@@ -13,6 +13,7 @@ const authCtrl = require('./controllers/auth');
 const userCtrl = require('./controllers/users')
 const lifePhaseCtrl = require('./controllers/lifePhases');
 const memoryCtrl = require('./controllers/memories');
+const reflectionCtrl = require('./controllers/reflections');
 
 // Middleware
 const verifyToken = require('./middleware/verify-token');
@@ -35,6 +36,7 @@ app.use(verifyToken);
 app.use('/users', userCtrl);
 app.use('/lifePhases', lifePhaseCtrl);
 app.use('/memories', memoryCtrl);
+app.use('/reflections', reflectionCtrl);
 
 app.get('/test', (req, res) => {
   res.status(200).json({ message: 'Authentication successful', 
