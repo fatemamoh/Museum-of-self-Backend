@@ -19,6 +19,11 @@ size:{
     enum:['Small', 'Medium', 'Large'],
     default:'Medium'
 },
+contentUrl:{
+    type:String,
+    required: function() {return this.type!== 'Text'}
+},
+
 }, {timestamps: true}); 
 const Memory = mongoose.model('Memory', memorySchema);
 
