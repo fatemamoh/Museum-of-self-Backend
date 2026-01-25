@@ -58,4 +58,18 @@ router.delete('/profile', async (req, res) => {
   }
 });
 
+router.put('resetVaultPin', async (req, res) => {
+  try {
+    const { password, newMasterPin } = req.body;
+    const user = await User.findById(req.user._id);
+
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) return res.status(401).json({ err: "Identity verification failed." });
+
+    user.masterPin = newMasterPin;
+    await user.save();
+  } catch (error) {
+    res.status(500).json({ err: error.message });
+  }
+});
 module.exports = router;
