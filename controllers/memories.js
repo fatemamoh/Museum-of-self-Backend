@@ -18,7 +18,7 @@ router.post('/', upload.single('file'), async (req, res) => {
     }
 });
 
-// memories in a specifec phase
+// memories in a specific phase
 router.get('/phase/:phaseId', async (req, res) => {
     try {
         const memories = await Memory.find({
@@ -48,6 +48,14 @@ router.get('/:id', async (req, res) => {
         const memory = await Memory.findById(req.params.id);
         if (!memory || !memory.user.equals(req.user._id)) {
             return res.status(404).json({ err: 'Artifact not found.' });
+        }
+        if (memory.unlockDate && new Date() < new Date(memory.unlockDate)) {
+             return res.status(200).json({
+                ...memory._doc,
+                contentUrl: null,
+                story: "Locked in a Time Capsule",
+                isLocked: true
+            });
         }
         res.status(200).json(memory);
     } catch (error) {
@@ -81,6 +89,7 @@ router.put('/:id', upload.single('file'), async (req, res) => {
     }
 });
 
+// delete memory
 router.delete('/:id', async (req, res) => {
     try {
         const memory = await Memory.findById(req.params.id);
