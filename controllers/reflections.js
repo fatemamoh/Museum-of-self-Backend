@@ -14,8 +14,11 @@ router.post('/:memoryId', async (req, res) => {
         }
 
         if (memory.isVaulted) {
-            const user  = await User.findById(req.user._id);
-            const isMatch = await user.comparePin(req.headers['x-master-pin']);
+            const providedPin = req.headers['x-master-pin'];
+            if (!providedPin) return res.status(401).json({ err: "Vault access denied. PIN required." });
+            
+            const user = await User.findById(req.user._id);
+            const isMatch = await user.comparePin(providedPin);
             if (!isMatch) return res.status(401).json({ err: "Vault access denied." });
         }
 
@@ -33,9 +36,16 @@ router.post('/:memoryId', async (req, res) => {
 router.get('/memory/:memoryId', async (req, res) => {
     try {
         const memory = await Memory.findById(req.params.memoryId);
+        if (!memory || !memory.user.equals(req.user._id)) {
+            return res.status(404).json({ err: "Artifact not found." });
+        }
+
         if (memory.isVaulted) {
+            const providedPin = req.headers['x-master-pin'];
+            if (!providedPin) return res.status(401).json({ err: "Vault locked. PIN required." });
+
             const user = await User.findById(req.user._id);
-            const isMatch = await user.comparePin(req.headers['x-master-pin']);
+            const isMatch = await user.comparePin(providedPin);
             if (!isMatch) return res.status(401).json({ err: "Vault locked." });
         }
 

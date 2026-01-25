@@ -26,7 +26,10 @@ router.get('/phase/:phaseId', async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
         const providedPin = req.headers['x-master-pin'];
-        const isPinCorrect = await user.comparePin(providedPin);
+
+        // FIX: Check if providedPin exists before trying to compare it.
+        // If no pin is provided, isPinCorrect is simply false.
+        const isPinCorrect = providedPin ? await user.comparePin(providedPin) : false;
 
         const memories = await Memory.find({
             phase: req.params.phaseId,
@@ -36,12 +39,12 @@ router.get('/phase/:phaseId', async (req, res) => {
         const curatedMemories = memories.map(memory => {
             const isLocked = memory.unlockDate && new Date() < new Date(memory.unlockDate);
             const isVaulted = memory.isVaulted && !isPinCorrect;
-            
+
             if (isLocked || isVaulted) {
                 return {
                     ...memory._doc,
-                    contentUrl: null,
-                    story: isVaulted ? "Vaulted" : "Locked",
+                    contentUrl: null, // Hide sensitive data
+                    story: isVaulted ? "Vaulted" : "Locked in a Time Capsule",
                     isLocked: true,
                     needsPin: isVaulted
                 };
@@ -61,8 +64,14 @@ router.get('/:id', async (req, res) => {
         if (!memory || !memory.user.equals(req.user._id)) {
             return res.status(404).json({ err: 'Artifact not found.' });
         }
+        if (memory.isVaulted) {
+            const user = await User.findById(req.user._id);
+            const isMatch = await user.comparePin(req.headers['x-master-pin']);
+            if (!isMatch) return res.status(401).json({ err: "Vault locked." });
+        }
+
         if (memory.unlockDate && new Date() < new Date(memory.unlockDate)) {
-             return res.status(200).json({
+            return res.status(200).json({
                 ...memory._doc,
                 contentUrl: null,
                 story: "Locked in a Time Capsule",
@@ -102,15 +111,17 @@ router.put('/:id', upload.single('file'), async (req, res) => {
 });
 
 // delete memory
-router.delete('/:id',verifyVault, async (req, res) => {
+router.delete('/:id', verifyVault, async (req, res) => {
     try {
         const memory = await Memory.findById(req.params.id);
         if (!memory || !memory.user.equals(req.user._id)) {
             return res.status(403).json({ err: "Unauthorized removal." });
         }
         await Reflection.deleteMany({ memory: req.params.id });
-        if (memory.cloudinaryPublicId) await cloudinary.uploader.destroy(memory.cloudinaryPublicId);
-        
+        if (memory.cloudinaryPublicId) {
+            await cloudinary.uploader.destroy(memory.cloudinaryPublicId);
+        }
+
         await Memory.findByIdAndDelete(req.params.id);
         res.status(200).json({ message: "Artifact removed from the collection." });
     } catch (error) {
