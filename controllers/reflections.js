@@ -46,3 +46,39 @@ router.get('/:id', async (req, res) => {
         res.status(500).json({ err: error.message });
     }
 });
+
+// update one reflection
+router.put('/:id', async (req, res) => {
+    try {
+        const reflection = await Reflection.findById(req.params.id);
+        if (!reflection || !reflection.user.equals(req.user._id)) {
+            return res.status(403).json({ err: "Unauthorized renovation of this thought." });
+        }
+
+        const updatedReflection = await Reflection.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true, runValidators: true }
+        );
+        res.status(200).json(updatedReflection);
+    } catch (error) {
+        res.status(500).json({ err: error.message });
+    }
+});
+
+// delete reflection
+router.delete('/:id', async (req, res) => {
+    try {
+        const reflection = await Reflection.findById(req.params.id);
+        if (!reflection || !reflection.user.equals(req.user._id)) {
+            return res.status(403).json({ err: "Unauthorized removal." });
+        }
+
+        await Reflection.findByIdAndDelete(req.params.id);
+        res.status(200).json({ message: "Perspective removed from the archive." });
+    } catch (error) {
+        res.status(500).json({ err: error.message });
+    }
+});
+
+module.exports = router;
