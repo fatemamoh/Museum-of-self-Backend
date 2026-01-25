@@ -18,6 +18,7 @@ router.post('/', upload.single('file'), async (req, res) => {
     }
 });
 
+// memories in a specifec phase
 router.get('/phase/:phaseId', async (req, res) => {
     try {
         const memories = await Memory.find({
@@ -41,6 +42,31 @@ router.get('/phase/:phaseId', async (req, res) => {
     }
 });
 
+// get one memory
 
+router.put('/:id', upload.single('file'), async (req, res) => {
+    try {
+        const memory = await Memory.findById(req.params.id);
+        if (!memory || !memory.user.equals(req.user._id)) {
+            return res.status(403).json({ err: "Unauthorized renovation." });
+        }
+        if (req.file) {
+            if (memory.cloudinaryPublicId) {
+                await cloudinary.uploader.destroy(memory.cloudinaryPublicId);
+            }
+            req.body.contentUrl = req.file.path;
+            req.body.cloudinaryPublicId = req.file.filename;
+        }
+
+        const updatedMemory = await Memory.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true, runValidators: true }
+        );
+        res.status(200).json(updatedMemory);
+    } catch (error) {
+        res.status(500).json({ err: error.message });
+    }
+});
 
 module.exports = router;
