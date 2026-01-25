@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const Reflection = require('../models/reflection');
 const Memory = require('../models/memory');
+const User = require('../models/user');
+const verifyVault = require('../middleware/verify-vault');
 
 // create reflection
 router.post('/:memoryId', async (req, res) => {
@@ -9,6 +11,15 @@ router.post('/:memoryId', async (req, res) => {
         const memory = await Memory.findById(req.params.memoryId);
         if (!memory || !memory.user.equals(req.user._id)) {
             return res.status(403).json({ err: "Cannot reflect on an inaccessible artifact." });
+        }
+
+        if (memory.isVaulted) {
+            const providedPin = req.headers['x-master-pin'];
+            if (!providedPin) return res.status(401).json({ err: "Vault access denied. PIN required." });
+
+            const user = await User.findById(req.user._id);
+            const isMatch = await user.comparePin(providedPin);
+            if (!isMatch) return res.status(401).json({ err: "Vault access denied." });
         }
 
         req.body.user = req.user._id;
@@ -24,6 +35,20 @@ router.post('/:memoryId', async (req, res) => {
 // get all reflections for Specific Memory
 router.get('/memory/:memoryId', async (req, res) => {
     try {
+        const memory = await Memory.findById(req.params.memoryId);
+        if (!memory || !memory.user.equals(req.user._id)) {
+            return res.status(404).json({ err: "Artifact not found." });
+        }
+
+        if (memory.isVaulted) {
+            const providedPin = req.headers['x-master-pin'];
+            if (!providedPin) return res.status(401).json({ err: "Vault locked. PIN required." });
+
+            const user = await User.findById(req.user._id);
+            const isMatch = await user.comparePin(providedPin);
+            if (!isMatch) return res.status(401).json({ err: "Vault locked." });
+        }
+
         const reflections = await Reflection.find({
             memory: req.params.memoryId,
             user: req.user._id
@@ -48,7 +73,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // update one reflection
-router.put('/:id', async (req, res) => {
+router.put('/:id', verifyVault, async (req, res) => {
     try {
         const reflection = await Reflection.findById(req.params.id);
         if (!reflection || !reflection.user.equals(req.user._id)) {
@@ -66,8 +91,8 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// delete reflection
-router.delete('/:id', async (req, res) => {
+// delete reflection 
+router.delete('/:id', verifyVault, async (req, res) => {
     try {
         const reflection = await Reflection.findById(req.params.id);
         if (!reflection || !reflection.user.equals(req.user._id)) {

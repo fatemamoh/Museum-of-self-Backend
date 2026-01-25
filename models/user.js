@@ -44,14 +44,14 @@ const userSchema = new mongoose.Schema({
     default: "",
   },
 
-  avatarPublicId :{
-     type: String,
+  avatarPublicId: {
+    type: String,
     default: "",
   },
 },
-{
-  timestamps: true
-});
+  {
+    timestamps: true
+  });
 
 userSchema.pre('save', async function () {
   if (this.isModified('password')) {
@@ -60,7 +60,6 @@ userSchema.pre('save', async function () {
   if (this.isModified('masterPin')) {
     this.masterPin = await bcrypt.hash(this.masterPin, 10);
   }
-
 });
 
 userSchema.set('toJSON', {
