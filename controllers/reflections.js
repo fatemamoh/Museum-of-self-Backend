@@ -20,3 +20,15 @@ try {
     res.status(500).json({ err: error.message });
 }
 });
+
+// get all reflections for Specific Memory
+router.get('/memory/:memoryId', async (req, res) =>{
+    try {
+        const reflections = await Reflection.find({ 
+            memory: req.params.memoryId,
+            user: req.user._id 
+        }).sort({ createdAt: -1 });
+    } catch (error) {
+       res.status(500).json({ err: error.message }); 
+    }
+});
