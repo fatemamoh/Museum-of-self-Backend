@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const Memory = require('../models/memory');
+const Reflection = require('../models/reflection');
+const User = require('../models/user');
+const verifyVault = require('../middleware/verify-vault');
 const { cloudinary, upload } = require('../config/cloudinary');
 
 // create new memory 
@@ -21,17 +24,26 @@ router.post('/', upload.single('file'), async (req, res) => {
 // memories in a specific phase
 router.get('/phase/:phaseId', async (req, res) => {
     try {
+        const user = await User.findById(req.user._id);
+        const providedPin = req.headers['x-master-pin'];
+        const isPinCorrect = await user.comparePin(providedPin);
+
         const memories = await Memory.find({
             phase: req.params.phaseId,
             user: req.user._id
         }).sort({ capturedDate: 1 });
+
         const curatedMemories = memories.map(memory => {
-            if (memory.unlockDate && new Date() < new Date(memory.unlockDate)) {
+            const isLocked = memory.unlockDate && new Date() < new Date(memory.unlockDate);
+            const isVaulted = memory.isVaulted && !isPinCorrect;
+            
+            if (isLocked || isVaulted) {
                 return {
                     ...memory._doc,
                     contentUrl: null,
-                    story: "Locked in a Time Capsule",
-                    isLocked: true
+                    story: isVaulted ? "Vaulted" : "Locked",
+                    isLocked: true,
+                    needsPin: isVaulted
                 };
             }
             return memory;

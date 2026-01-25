@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Reflection = require('../models/reflection');
 const Memory = require('../models/memory');
+const User = require('../models/user');
 const verifyVault = require('../middleware/verify-vault');
 
 // create reflection
@@ -13,7 +14,7 @@ router.post('/:memoryId', async (req, res) => {
         }
 
         if (memory.isVaulted) {
-            const user = await require('../models/user').findById(req.user._id);
+            const user  = await User.findById(req.user._id);
             const isMatch = await user.comparePin(req.headers['x-master-pin']);
             if (!isMatch) return res.status(401).json({ err: "Vault access denied." });
         }
@@ -33,7 +34,7 @@ router.get('/memory/:memoryId', async (req, res) => {
     try {
         const memory = await Memory.findById(req.params.memoryId);
         if (memory.isVaulted) {
-            const user = await require('../models/user').findById(req.user._id);
+            const user = await User.findById(req.user._id);
             const isMatch = await user.comparePin(req.headers['x-master-pin']);
             if (!isMatch) return res.status(401).json({ err: "Vault locked." });
         }
