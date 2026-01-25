@@ -12,6 +12,7 @@ const logger = require('morgan');
 const authCtrl = require('./controllers/auth');
 const userCtrl = require('./controllers/users')
 const lifePhaseCtrl = require('./controllers/lifePhases');
+const memoryCtrl = require('./controllers/memories');
 
 // Middleware
 const verifyToken = require('./middleware/verify-token');
@@ -33,6 +34,7 @@ app.use('/auth', authCtrl);
 app.use(verifyToken);
 app.use('/users', userCtrl);
 app.use('/lifePhases', lifePhaseCtrl);
+app.use('/memories', memoryCtrl);
 
 app.get('/test', (req, res) => {
   res.status(200).json({ message: 'Authentication successful', 
