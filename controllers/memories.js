@@ -102,17 +102,15 @@ router.put('/:id', upload.single('file'), async (req, res) => {
 });
 
 // delete memory
-router.delete('/:id', async (req, res) => {
+router.delete('/:id',verifyVault, async (req, res) => {
     try {
         const memory = await Memory.findById(req.params.id);
         if (!memory || !memory.user.equals(req.user._id)) {
             return res.status(403).json({ err: "Unauthorized removal." });
         }
-
-        if (memory.cloudinaryPublicId) {
-            await cloudinary.uploader.destroy(memory.cloudinaryPublicId);
-        }
-
+        await Reflection.deleteMany({ memory: req.params.id });
+        if (memory.cloudinaryPublicId) await cloudinary.uploader.destroy(memory.cloudinaryPublicId);
+        
         await Memory.findByIdAndDelete(req.params.id);
         res.status(200).json({ message: "Artifact removed from the collection." });
     } catch (error) {
