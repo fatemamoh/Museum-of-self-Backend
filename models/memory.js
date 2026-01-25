@@ -1,38 +1,48 @@
-const mongoose = require ('mongoose'); 
+const mongoose = require('mongoose');
 
 const memorySchema = new mongoose.Schema({
 
-title:{
-    type:String,
-    required:[true, 'Every artifact needs a title for the muesum catalog'],
-    trim:true
-}, 
+    title: {
+        type: String,
+        required: [true, 'Every artifact needs a title for the muesum catalog'],
+        trim: true
+    },
 
-type:{
-    type:String,
-    enum:['Text','Image','Video','Audio',,'Link'],
-    default:'Text'
-},
+    type: {
+        type: String,
+        enum: ['Text', 'Image', 'Video', 'Audio', , 'Link'],
+        default: 'Text'
+    },
 
-size:{
-    type:String,
-    enum:['Small', 'Medium', 'Large'],
-    default:'Medium'
-},
-contentUrl:{
-    type:String,
-    required: function() {return this.type!== 'Text'}
-},
+    size: {
+        type: String,
+        enum: ['Small', 'Medium', 'Large'],
+        default: 'Medium'
+    },
+    contentUrl: {
+        type: String,
+        required: function () { return this.type !== 'Text' }
+    },
 
-story:{
-    type:String
-},
-curatorNote:{
-    type:String,
-    maxlength: 150
-},
+    story: {
+        type: String
+    },
+    curatorNote: {
+        type: String,
+        maxlength: 150
+    },
 
-}, {timestamps: true}); 
+    moodTag: {
+        type: String,
+        enum: [
+            'Nostalgic', 'Victorious', 'Radiant', 'Joyful',
+            'Quiet', 'Chaotic', 'Melancholic', 'Inspirational',
+            'Anxious', 'Peaceful', 'Bittersweet', 'Humorous',
+            'Profound', 'Ordinary', 'Rebellious'
+        ],
+        default: 'Ordinary'
+    },
+}, { timestamps: true });
 const Memory = mongoose.model('Memory', memorySchema);
 
 module.exports = Memory;
