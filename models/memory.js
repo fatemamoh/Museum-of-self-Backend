@@ -28,7 +28,7 @@ const memorySchema = new mongoose.Schema({
         type: String,
         default: null
     },
-    
+
     story: {
         type: String
     },
@@ -85,6 +85,6 @@ const memorySchema = new mongoose.Schema({
     }
 
 }, { timestamps: true });
-const Memory = mongoose.model('Memory', memorySchema);
 
+const Memory = mongoose.model('Memory', memorySchema);
 module.exports = Memory;
