@@ -57,8 +57,8 @@ router.post('/sign-in', async (req, res) => {
     const token = jwt.sign({ payload }, process.env.JWT_SECRET);
 
     res.status(200).json({ token, user });
-  } catch (err) {
-    res.status(500).json({ err: err.message });
+  } catch (error) {
+    res.status(500).json({ err: error.message });
   }
 });
 
@@ -75,9 +75,31 @@ router.post('/forgot-password', async (req, res) => {
     await sendPasswordResetEmail(user.email, token);
     res.status(200).json({ message: "Recovery invitation sent to your inbox." });
   } catch (error) {
-    res.status(500).json({ err: err.message });
+    res.status(500).json({ err: error.message });
 
   }
+});
+
+router.post('/reset-password/:token', async (req, res) => {
+    try {
+        const user = await User.findOne({
+            resetPasswordToken: req.params.token,
+            resetPasswordExpires: { $gt: Date.now() } 
+        });
+
+        if (!user) {
+            return res.status(400).json({ err: "Recovery link is invalid or has expired." });
+        }
+
+        user.password = req.body.password;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+        await user.save();
+
+        res.status(200).json({ message: "Vault access restored. You can now sign in with your new password." });
+    } catch (error) {
+        res.status(500).json({ err: error.message });
+    }
 });
 
 module.exports = router;
