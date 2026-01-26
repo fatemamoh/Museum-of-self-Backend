@@ -30,7 +30,7 @@ const sendWelcomeEmail = async (email, name) => {
 
 const sendPasswordResetEmail = async (email, token) => {
     try {
-        const link = `${process.env.FRONTEND_URL}/resetPassword/${token}`;
+        const link = `${process.env.FRONTEND_URL}/reset-password/${token}`;
         await transporter.sendMail({
             from: `"The Museum Curator" <${process.env.EMAIL_USER}>`,
             to: email,

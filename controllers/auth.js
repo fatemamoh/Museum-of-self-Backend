@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const User = require('../models/user');
-const { sendWelcomeEmail } = require('../services/emailService');
+const { sendWelcomeEmail, sendPasswordResetEmail } = require('../services/emailService');
 
-router.post('/sign-up', async (req, res, next) => {
+router.post('/sign-up', async (req, res) => {
   try {
     const { username, email, password, masterPin } = req.body;
 
@@ -40,7 +41,7 @@ router.post('/sign-up', async (req, res, next) => {
   }
 });
 
-router.post('/sign-in', async (req, res, next) => {
+router.post('/sign-in', async (req, res) => {
   try {
     const { identifier, password } = req.body;
 
@@ -48,12 +49,7 @@ router.post('/sign-in', async (req, res, next) => {
       $or: [{ username: identifier }, { email: identifier }]
     });
 
-    if (!user) {
-      return res.status(401).json({ err: 'Invalid Credentials' });
-    }
-
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
+    if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({ err: 'Invalid Credentials' });
     }
 
@@ -63,6 +59,24 @@ router.post('/sign-in', async (req, res, next) => {
     res.status(200).json({ token, user });
   } catch (err) {
     res.status(500).json({ err: err.message });
+  }
+});
+
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) return res.status(404).json({ err: "Curator not found with that email." });
+
+    const token = crypto.randomBytes(20).toString('hex');
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = Date.now() + 3600000;
+    await user.save();
+
+    await sendPasswordResetEmail(user.email, token);
+    res.status(200).json({ message: "Recovery invitation sent to your inbox." });
+  } catch (error) {
+    res.status(500).json({ err: err.message });
+
   }
 });
 
