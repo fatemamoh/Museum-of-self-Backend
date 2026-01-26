@@ -7,7 +7,9 @@ const app = express();
 const mongoose = require('mongoose');
 const cors = require('cors');
 const logger = require('morgan');
-const { sendWelcomeEmail } = require('./services/emailService');
+
+// services
+const initTimeCapsule = require('./services/timeCapsule');
 
 // Controllers
 const authCtrl = require('./controllers/auth');
@@ -31,14 +33,8 @@ app.use(logger('dev'));
 // Public Routes
 app.use('/auth', authCtrl);
 
-app.get('/test-email-ui', async (req, res) => {
-    try {
-        await sendWelcomeEmail('ghostlyblueme@gmail.com', 'Test Curator');
-        res.send('<h1>Check your inbox! The Museum Invitation has been sent.</h1>');
-    } catch (err) {
-        res.status(500).send(err.message);
-    }
-});
+// Time Capsule 
+initTimeCapsule();
 
 // Protected Routes
 app.use(verifyToken);
