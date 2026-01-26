@@ -48,6 +48,13 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: "",
   },
+  resetPasswordToken: String,
+
+  resetPasswordExpires: Date,
+
+  resetMasterPinToken: String,
+
+  resetMasterPinExpires: Date,
 },
   {
     timestamps: true
@@ -62,14 +69,6 @@ userSchema.pre('save', async function () {
   }
 });
 
-userSchema.set('toJSON', {
-  transform: (document, returnedObject) => {
-    delete returnedObject.password;
-    delete returnedObject.masterPin;
-    delete returnedObject.avatarPublicId;
-    return returnedObject;
-  },
-});
 
 userSchema.methods.comparePassword = function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
@@ -78,6 +77,19 @@ userSchema.methods.comparePassword = function (candidatePassword) {
 userSchema.methods.comparePin = function (candidatePin) {
   return bcrypt.compare(candidatePin, this.masterPin);
 };
+
+userSchema.set('toJSON', {
+  transform: (document, returnedObject) => {
+    delete returnedObject.password;
+    delete returnedObject.masterPin;
+    delete returnedObject.avatarPublicId;
+    delete returnedObject.resetPasswordToken;
+    delete returnedObject.resetPasswordExpires;
+    delete returnedObject.resetMasterPinToken;
+    delete returnedObject.resetMasterPinExpires;
+    return returnedObject;
+  },
+});
 
 
 const User = mongoose.model('User', userSchema);
