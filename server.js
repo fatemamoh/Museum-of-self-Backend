@@ -8,6 +8,9 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const logger = require('morgan');
 
+// services
+const initTimeCapsule = require('./services/timeCapsule');
+
 // Controllers
 const authCtrl = require('./controllers/auth');
 const userCtrl = require('./controllers/users')
@@ -30,6 +33,9 @@ app.use(logger('dev'));
 // Public Routes
 app.use('/auth', authCtrl);
 
+// Time Capsule 
+initTimeCapsule();
+
 // Protected Routes
 app.use(verifyToken);
 app.use('/users', userCtrl);
@@ -37,6 +43,8 @@ app.use('/lifePhases', lifePhaseCtrl);
 app.use('/memories', memoryCtrl);
 app.use('/reflections', reflectionCtrl);
 
+
 app.listen(process.env.PORT || 3000, () => {
   console.log('The express app is ready!');
 });
+

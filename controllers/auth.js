@@ -1,16 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const User = require('../models/user');
+const { sendWelcomeEmail, sendPasswordResetEmail } = require('../services/emailService');
 
-router.post('/sign-up', async (req, res, next) => {
+router.post('/sign-up', async (req, res) => {
   try {
     const { username, email, password, masterPin } = req.body;
-    
+
     const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
     if (!passwordRegex.test(password)) {
-      return res.status(400).json({ 
-        err: 'Password must be at least 8 characters long and include both a letter and a number.' 
+      return res.status(400).json({
+        err: 'Password must be at least 8 characters long and include both a letter and a number.'
       });
     }
 
@@ -21,8 +23,10 @@ router.post('/sign-up', async (req, res, next) => {
 
     const user = await User.create(req.body);
 
-    const payload = { 
-      username: user.username, 
+    sendWelcomeEmail(user.email, user.username)
+
+    const payload = {
+      username: user.username,
       _id: user._id,
       bio: user.bio,
       location: user.location,
@@ -37,20 +41,15 @@ router.post('/sign-up', async (req, res, next) => {
   }
 });
 
-router.post('/sign-in', async (req, res, next) => {
+router.post('/sign-in', async (req, res) => {
   try {
     const { identifier, password } = req.body;
 
-    const user = await User.findOne({ 
+    const user = await User.findOne({
       $or: [{ username: identifier }, { email: identifier }]
     });
 
-    if (!user) {
-      return res.status(401).json({ err: 'Invalid Credentials' });
-    }
-
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
+    if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({ err: 'Invalid Credentials' });
     }
 
@@ -58,9 +57,49 @@ router.post('/sign-in', async (req, res, next) => {
     const token = jwt.sign({ payload }, process.env.JWT_SECRET);
 
     res.status(200).json({ token, user });
-  } catch (err) {
-    res.status(500).json({ err: err.message });
+  } catch (error) {
+    res.status(500).json({ err: error.message });
   }
+});
+
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) return res.status(404).json({ err: "Curator not found with that email." });
+
+    const token = crypto.randomBytes(20).toString('hex');
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = Date.now() + 3600000;
+    await user.save();
+
+    await sendPasswordResetEmail(user.email, token);
+    res.status(200).json({ message: "Recovery invitation sent to your inbox." });
+  } catch (error) {
+    res.status(500).json({ err: error.message });
+
+  }
+});
+
+router.post('/reset-password/:token', async (req, res) => {
+    try {
+        const user = await User.findOne({
+            resetPasswordToken: req.params.token,
+            resetPasswordExpires: { $gt: Date.now() } 
+        });
+
+        if (!user) {
+            return res.status(400).json({ err: "Recovery link is invalid or has expired." });
+        }
+
+        user.password = req.body.password;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+        await user.save();
+
+        res.status(200).json({ message: "Vault access restored. You can now sign in with your new password." });
+    } catch (error) {
+        res.status(500).json({ err: error.message });
+    }
 });
 
 module.exports = router;
