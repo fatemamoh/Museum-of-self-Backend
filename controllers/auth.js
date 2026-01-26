@@ -22,7 +22,7 @@ router.post('/sign-up', async (req, res, next) => {
 
     const user = await User.create(req.body);
 
-    sendWelcomeEmail(user.email, user.username);
+    sendWelcomeEmail(user.email, user.username).catch(err => console.log("Email failed:", err));
 
     const payload = {
       username: user.username,
