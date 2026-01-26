@@ -7,3 +7,13 @@ const transporter = nodemailer.createTransport({
         pass:process.env.EMAIL_PASS
     }
 });
+
+const sendWelcomeEmail = async (userEmail, userName) => {
+    try {
+        
+    } catch (error) {
+        
+    }
+}
+
+module.exports = {sendWelcomeEmail}
