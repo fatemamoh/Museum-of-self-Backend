@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+const { sendWelcomeEmail } = require('../services/emailService');
 
 router.post('/sign-up', async (req, res, next) => {
   try {
@@ -21,6 +22,8 @@ router.post('/sign-up', async (req, res, next) => {
 
     const user = await User.create(req.body);
 
+    sendWelcomeEmail(user.email, user.username);
+    
     const payload = { 
       username: user.username, 
       _id: user._id,
