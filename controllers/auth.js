@@ -7,11 +7,11 @@ const { sendWelcomeEmail } = require('../services/emailService');
 router.post('/sign-up', async (req, res, next) => {
   try {
     const { username, email, password, masterPin } = req.body;
-    
+
     const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
     if (!passwordRegex.test(password)) {
-      return res.status(400).json({ 
-        err: 'Password must be at least 8 characters long and include both a letter and a number.' 
+      return res.status(400).json({
+        err: 'Password must be at least 8 characters long and include both a letter and a number.'
       });
     }
 
@@ -23,9 +23,9 @@ router.post('/sign-up', async (req, res, next) => {
     const user = await User.create(req.body);
 
     sendWelcomeEmail(user.email, user.username);
-    
-    const payload = { 
-      username: user.username, 
+
+    const payload = {
+      username: user.username,
       _id: user._id,
       bio: user.bio,
       location: user.location,
@@ -44,7 +44,7 @@ router.post('/sign-in', async (req, res, next) => {
   try {
     const { identifier, password } = req.body;
 
-    const user = await User.findOne({ 
+    const user = await User.findOne({
       $or: [{ username: identifier }, { email: identifier }]
     });
 
