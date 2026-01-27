@@ -22,7 +22,7 @@ router.put('/profile', upload.single('avatar'), async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(
       req.user._id,
       { $set: updateData },
-      { new: true, runValidators: true }
+      { new: true, runValidators: false }
     ).select('-password -masterPin');
 
     if (!updatedUser) return res.status(404).json({ err: 'User not found' });
@@ -58,19 +58,4 @@ router.delete('/profile', async (req, res) => {
   }
 });
 
-router.put('/resetVaultPin', async (req, res) => {
-  try {
-    const { password, newMasterPin } = req.body;
-    const user = await User.findById(req.user._id);
-
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) return res.status(401).json({ err: "Identity verification failed." });
-
-    user.masterPin = newMasterPin;
-    await user.save();
-    res.status(200).json({ message: "Vault PIN successfully updated." });
-  } catch (error) {
-    res.status(500).json({ err: error.message });
-  }
-});
 module.exports = router;
