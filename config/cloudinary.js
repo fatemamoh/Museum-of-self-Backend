@@ -8,7 +8,7 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'museum_of_self', 
-    allowedFormats: ['jpg', 'png', 'jpeg', 'mp4', 'mp3'], 
+    allowed_formats: ['jpg', 'png', 'jpeg', 'mp4', 'mp3'], 
     resource_type: 'auto', 
   },
 });

@@ -5,17 +5,18 @@ const { cloudinary, upload } = require('../config/cloudinary');
 
 router.put('/profile', upload.single('avatar'), async (req, res) => {
   try {
-    const updateData = {
-      bio: req.body.bio,
-      location: req.body.location
-    };
+    const updateData = {};
+    if (req.body.bio !== undefined) updateData.bio = req.body.bio;
+    if (req.body.location !== undefined) updateData.location = req.body.location;
 
     if (req.file) {
       const user = await User.findById(req.user._id);
+
       if (user && user.avatarPublicId) {
         await cloudinary.uploader.destroy(user.avatarPublicId);
       }
-      updateData.avatarUrl = req.file.path;
+
+      updateData.avatarUrl = req.file.path || req.file.secure_url;
       updateData.avatarPublicId = req.file.filename;
     }
 
