@@ -39,6 +39,7 @@ const sendPasswordResetEmail = async (email, token) => {
         });
     } catch (e) {
         console.error("❌ Password Reset Email Error:", e.message);
+        throw e;
     }
 };
 

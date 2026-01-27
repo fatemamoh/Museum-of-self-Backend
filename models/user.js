@@ -61,11 +61,19 @@ const userSchema = new mongoose.Schema({
   });
 
 userSchema.pre('save', async function () {
-  if (this.isModified('password')) {
-    this.password = await bcrypt.hash(this.password, 10);
+  if (!this.isModified('password') && !this.isModified('masterPin')) {
+    return
   }
-  if (this.isModified('masterPin')) {
-    this.masterPin = await bcrypt.hash(this.masterPin, 10);
+
+  try {
+    if (this.isModified('password')) {
+      this.password = await bcrypt.hash(this.password, 10);
+    }
+    if (this.isModified('masterPin')) {
+      this.masterPin = await bcrypt.hash(this.masterPin, 10);
+    }
+  } catch (error) {
+    throw error;
   }
 });
 
