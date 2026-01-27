@@ -32,11 +32,6 @@ const lifePhaseSchema = new mongoose.Schema({
         type: Date,
         default: null
     },
-    theme: {
-        type: String,
-        enum: ['classic', 'crimson', 'autumn', 'dusk'],
-        default: 'classic'
-    },
     user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
