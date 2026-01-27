@@ -34,8 +34,8 @@ const lifePhaseSchema = new mongoose.Schema({
     },
     theme: {
         type: String,
-        enum: ['gold', 'olive', 'charcoal', 'terracotta', 'slate'],
-        default: 'gold'
+        enum: ['classic', 'crimson', 'autumn', 'dusk'],
+        default: 'classic'
     },
     user: {
         type: mongoose.Schema.Types.ObjectId,
