@@ -3,7 +3,6 @@ const router = express.Router();
 const Memory = require('../models/memory');
 const Reflection = require('../models/reflection');
 const User = require('../models/user');
-const verifyVault = require('../middleware/verify-vault');
 const { cloudinary, upload } = require('../config/cloudinary');
 
 router.post('/', upload.single('file'), async (req, res) => {
@@ -40,30 +39,13 @@ router.post('/', upload.single('file'), async (req, res) => {
 router.get('/phase/:phaseId', async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
-        const providedPin = req.headers['x-master-pin'];
-        const isPinCorrect = providedPin ? await user.comparePin(providedPin) : false;
 
         const memories = await Memory.find({
             phase: req.params.phaseId,
             user: req.user._id
         }).sort({ capturedDate: 1 });
 
-        const curatedMemories = memories.map(memory => {
-            const isLocked = memory.unlockDate && new Date() < new Date(memory.unlockDate);
-            const isVaulted = memory.isVaulted && !isPinCorrect;
-
-            if (isLocked || isVaulted) {
-                return {
-                    ...memory._doc,
-                    contentUrl: null, 
-                    story: isVaulted ? "Vaulted" : "Locked in a Time Capsule",
-                    isLocked: true,
-                    needsPin: isVaulted
-                };
-            }
-            return memory;
-        });
-        res.status(200).json(curatedMemories);
+        res.status(200).json(memories);
     } catch (error) {
         res.status(500).json({ err: error.message });
     }
@@ -75,20 +57,7 @@ router.get('/:id', async (req, res) => {
         if (!memory || !memory.user.equals(req.user._id)) {
             return res.status(404).json({ err: 'Artifact not found.' });
         }
-        if (memory.isVaulted) {
-            const user = await User.findById(req.user._id);
-            const isMatch = await user.comparePin(req.headers['x-master-pin']);
-            if (!isMatch) return res.status(401).json({ err: "Vault locked." });
-        }
-
-        if (memory.unlockDate && new Date() < new Date(memory.unlockDate)) {
-            return res.status(200).json({
-                ...memory._doc,
-                contentUrl: null,
-                story: "Locked in a Time Capsule",
-                isLocked: true
-            });
-        }
+        
         res.status(200).json(memory);
     } catch (error) {
         res.status(500).json({ err: error.message });
@@ -123,7 +92,7 @@ router.put('/:id', upload.single('file'), async (req, res) => {
     }
 });
 
-router.delete('/:id', verifyVault, async (req, res) => {
+router.delete('/:id', async (req, res) => {
     try {
         const memory = await Memory.findById(req.params.id);
         if (!memory || !memory.user.equals(req.user._id)) {

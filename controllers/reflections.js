@@ -54,7 +54,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // update one reflection
-router.put('/:id', verifyVault, async (req, res) => {
+router.put('/:id', async (req, res) => {
     try {
         const reflection = await Reflection.findById(req.params.id);
         if (!reflection || !reflection.user.equals(req.user._id)) {
@@ -73,7 +73,7 @@ router.put('/:id', verifyVault, async (req, res) => {
 });
 
 // delete reflection 
-router.delete('/:id', verifyVault, async (req, res) => {
+router.delete('/:id', async (req, res) => {
     try {
         const reflection = await Reflection.findById(req.params.id);
         if (!reflection || !reflection.user.equals(req.user._id)) {
