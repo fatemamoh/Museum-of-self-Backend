@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const bcrypt = require('bcrypt');
 const User = require('../models/user');
 const { sendWelcomeEmail, sendPasswordResetEmail } = require('../services/emailService');
 
@@ -61,7 +60,7 @@ router.post('/sign-in', async (req, res) => {
 router.post('/forgot-password', async (req, res) => {
   try {
     const user = await User.findOne({ email: req.body.email });
-    if (!user) return res.status(404).json({ err: "Curator not found." });
+    if (!user) return res.status(404).json({ err: "User not found." });
 
     const token = crypto.randomBytes(20).toString('hex');
     user.resetPasswordToken = token;
@@ -70,9 +69,8 @@ router.post('/forgot-password', async (req, res) => {
 
     await sendPasswordResetEmail(user.email, token);
 
-    res.status(200).json({ message: "Recovery invitation sent." });
+    res.status(200).json({ message: "Password reset link sent to email." });
   } catch (error) {
-    console.error("DETAILED ERROR:", error); 
     res.status(500).json({ err: error.message });
   }
 });
@@ -86,12 +84,11 @@ router.post('/reset-password/:token', async (req, res) => {
     if (!user) {
       return res.status(400).json({ err: "Recovery link is invalid or has expired." });
     }
-    user.password = req.body.password;
-      
+    user.password = req.body.password;  
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
     await user.save({ validateBeforeSave: false });
-    res.status(200).json({ message: "Vault access restored." });
+    res.status(200).json({ message: "Password successfully updated." });
   } catch (error) {
     res.status(500).json({ err: error.message });
   }
