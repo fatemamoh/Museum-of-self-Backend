@@ -8,8 +8,6 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const logger = require('morgan');
 
-// services
-const initTimeCapsule = require('./services/timeCapsule');
 
 // Controllers
 const authCtrl = require('./controllers/auth');
@@ -32,9 +30,6 @@ app.use(logger('dev'));
 
 // Public Routes
 app.use('/auth', authCtrl);
-
-// Time Capsule 
-initTimeCapsule();
 
 // Protected Routes
 app.use(verifyToken);

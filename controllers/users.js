@@ -24,7 +24,7 @@ router.put('/profile', upload.single('avatar'), async (req, res) => {
       req.user._id,
       { $set: updateData },
       { new: true, runValidators: false }
-    ).select('-password -masterPin');
+    ).select('-password');
 
     if (!updatedUser) return res.status(404).json({ err: 'User not found' });
 
@@ -36,7 +36,7 @@ router.put('/profile', upload.single('avatar'), async (req, res) => {
 
 router.get('/profile', async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select('-password -masterPin');
+    const user = await User.findById(req.user._id).select('-password');
     res.json(user);
   } catch (err) {
     res.status(500).json({ err: err.message });

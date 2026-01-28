@@ -6,29 +6,41 @@ const User = require('../models/user');
 const verifyVault = require('../middleware/verify-vault');
 const { cloudinary, upload } = require('../config/cloudinary');
 
-// create new memory 
 router.post('/', upload.single('file'), async (req, res) => {
     try {
-        req.body.user = req.user._id;
+        console.log("--- DEBUG: POST MEMORY ---");
+        console.log("1. req.body (Text fields):", req.body);
+        console.log("2. req.file (Cloudinary result):", req.file);
+
+        const memoryData = { ...req.body };
+        memoryData.user = req.user._id;
+
         if (req.file) {
-            req.body.contentUrl = req.file.path;
-            req.body.cloudinaryPublicId = req.file.filename;
+            memoryData.contentUrl = req.file.path;
+            memoryData.cloudinaryPublicId = req.file.filename;
+            console.log("3. Mapping successful. contentUrl is:", memoryData.contentUrl);
+        } else {
+            console.warn("3. WARNING: No file received by the controller!");
         }
-        const memory = await Memory.create(req.body);
+
+        if (memoryData.type !== 'Text' && memoryData.type !== 'Link' && !memoryData.contentUrl) {
+            console.error("4. ERROR: Validation will fail because contentUrl is missing for media type.");
+            return res.status(400).json({ err: "Memory validation failed: contentUrl is required." });
+        }
+
+        const memory = await Memory.create(memoryData);
+        console.log("5. SUCCESS: Memory created in DB");
         res.status(201).json(memory);
     } catch (error) {
+        console.error("X. CATCH ERROR:", error.message);
         res.status(500).json({ err: error.message });
     }
 });
 
-// memories in a specific phase
 router.get('/phase/:phaseId', async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
         const providedPin = req.headers['x-master-pin'];
-
-        // FIX: Check if providedPin exists before trying to compare it.
-        // If no pin is provided, isPinCorrect is simply false.
         const isPinCorrect = providedPin ? await user.comparePin(providedPin) : false;
 
         const memories = await Memory.find({
@@ -43,7 +55,7 @@ router.get('/phase/:phaseId', async (req, res) => {
             if (isLocked || isVaulted) {
                 return {
                     ...memory._doc,
-                    contentUrl: null, // Hide sensitive data
+                    contentUrl: null, 
                     story: isVaulted ? "Vaulted" : "Locked in a Time Capsule",
                     isLocked: true,
                     needsPin: isVaulted
@@ -57,7 +69,6 @@ router.get('/phase/:phaseId', async (req, res) => {
     }
 });
 
-// get one memory
 router.get('/:id', async (req, res) => {
     try {
         const memory = await Memory.findById(req.params.id);
@@ -84,24 +95,26 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// update memory
 router.put('/:id', upload.single('file'), async (req, res) => {
     try {
         const memory = await Memory.findById(req.params.id);
         if (!memory || !memory.user.equals(req.user._id)) {
             return res.status(403).json({ err: "Unauthorized renovation." });
         }
+
+        const updateData = { ...req.body };
+
         if (req.file) {
             if (memory.cloudinaryPublicId) {
                 await cloudinary.uploader.destroy(memory.cloudinaryPublicId);
             }
-            req.body.contentUrl = req.file.path;
-            req.body.cloudinaryPublicId = req.file.filename;
+            updateData.contentUrl = req.file.path;
+            updateData.cloudinaryPublicId = req.file.filename;
         }
 
         const updatedMemory = await Memory.findByIdAndUpdate(
             req.params.id,
-            req.body,
+            updateData,
             { new: true, runValidators: true }
         );
         res.status(200).json(updatedMemory);
@@ -110,7 +123,6 @@ router.put('/:id', upload.single('file'), async (req, res) => {
     }
 });
 
-// delete memory
 router.delete('/:id', verifyVault, async (req, res) => {
     try {
         const memory = await Memory.findById(req.params.id);

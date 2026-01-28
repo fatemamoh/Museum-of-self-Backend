@@ -43,17 +43,6 @@ const sendPasswordResetEmail = async (email, token) => {
     }
 };
 
-const sendUnlockNotification = async (email, name, title) => {
-    try {
-        await transporter.sendMail({
-            from: `"The Museum Curator" <${process.env.EMAIL_USER}>`,
-            to: email,
-            subject: "🕒 Archive Notice: Unlock Complete",
-            html: museumTemplate("Artifact Released", `Curator ${name}, the artifact "<strong>${title}</strong>" is now available.`)
-        });
-    } catch (e) {
-        console.error("❌ Unlock Notification Email Error:", e.message);
-    }
-};
 
-module.exports = { sendWelcomeEmail, sendPasswordResetEmail, sendUnlockNotification };
+
+module.exports = { sendWelcomeEmail, sendPasswordResetEmail };

@@ -3,7 +3,6 @@ const router = express.Router();
 const Reflection = require('../models/reflection');
 const Memory = require('../models/memory');
 const User = require('../models/user');
-const verifyVault = require('../middleware/verify-vault');
 
 // create reflection
 router.post('/:memoryId', async (req, res) => {
@@ -11,15 +10,6 @@ router.post('/:memoryId', async (req, res) => {
         const memory = await Memory.findById(req.params.memoryId);
         if (!memory || !memory.user.equals(req.user._id)) {
             return res.status(403).json({ err: "Cannot reflect on an inaccessible artifact." });
-        }
-
-        if (memory.isVaulted) {
-            const providedPin = req.headers['x-master-pin'];
-            if (!providedPin) return res.status(401).json({ err: "Vault access denied. PIN required." });
-
-            const user = await User.findById(req.user._id);
-            const isMatch = await user.comparePin(providedPin);
-            if (!isMatch) return res.status(401).json({ err: "Vault access denied." });
         }
 
         req.body.user = req.user._id;
@@ -38,15 +28,6 @@ router.get('/memory/:memoryId', async (req, res) => {
         const memory = await Memory.findById(req.params.memoryId);
         if (!memory || !memory.user.equals(req.user._id)) {
             return res.status(404).json({ err: "Artifact not found." });
-        }
-
-        if (memory.isVaulted) {
-            const providedPin = req.headers['x-master-pin'];
-            if (!providedPin) return res.status(401).json({ err: "Vault locked. PIN required." });
-
-            const user = await User.findById(req.user._id);
-            const isMatch = await user.comparePin(providedPin);
-            if (!isMatch) return res.status(401).json({ err: "Vault locked." });
         }
 
         const reflections = await Reflection.find({

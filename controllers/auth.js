@@ -8,7 +8,7 @@ const { sendWelcomeEmail, sendPasswordResetEmail } = require('../services/emailS
 
 router.post('/sign-up', async (req, res) => {
   try {
-    const { username, email, password, masterPin } = req.body;
+    const { username, email, password } = req.body;
     const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
     if (!passwordRegex.test(password)) {
       return res.status(400).json({
@@ -87,9 +87,7 @@ router.post('/reset-password/:token', async (req, res) => {
       return res.status(400).json({ err: "Recovery link is invalid or has expired." });
     }
     user.password = req.body.password;
-    if (req.body.masterPin) {
-      user.masterPin = req.body.masterPin;
-    }
+      
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
     await user.save({ validateBeforeSave: false });

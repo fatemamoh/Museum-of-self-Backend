@@ -64,14 +64,6 @@ const memorySchema = new mongoose.Schema({
         required: [true, "The date of this occurrece is required for the timeline"]
     },
 
-    isVaulted: {
-        type: Boolean,
-        default: false
-    },
-    unlockDate: {
-        type: Date,
-        default: null
-    },
     phase: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'LifePhase',

@@ -23,12 +23,6 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Password is required'],
   },
 
-  masterPin: {
-    type: String,
-    required: [true, 'MasterPIN is required'],
-    match: [/^\d{4,6}$/, 'MasterPIN must be between 4 and 6 digits (numbers only)'],
-  },
-
   bio: {
     type: String,
     default: "",
@@ -54,16 +48,13 @@ const userSchema = new mongoose.Schema({
   });
 
 userSchema.pre('save', async function () {
-  if (!this.isModified('password') && !this.isModified('masterPin')) {
+  if (!this.isModified('password')) {
     return
   }
 
   try {
     if (this.isModified('password')) {
       this.password = await bcrypt.hash(this.password, 10);
-    }
-    if (this.isModified('masterPin')) {
-      this.masterPin = await bcrypt.hash(this.masterPin, 10);
     }
   } catch (error) {
     throw error;
@@ -75,19 +66,13 @@ userSchema.methods.comparePassword = function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-userSchema.methods.comparePin = function (candidatePin) {
-  return bcrypt.compare(candidatePin, this.masterPin);
-};
 
 userSchema.set('toJSON', {
   transform: (document, returnedObject) => {
     delete returnedObject.password;
-    delete returnedObject.masterPin;
     delete returnedObject.avatarPublicId;
     delete returnedObject.resetPasswordToken;
     delete returnedObject.resetPasswordExpires;
-    delete returnedObject.resetMasterPinToken;
-    delete returnedObject.resetMasterPinExpires;
     return returnedObject;
   },
 });
