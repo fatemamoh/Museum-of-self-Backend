@@ -2,44 +2,35 @@ const express = require('express');
 const router = express.Router();
 const Memory = require('../models/memory');
 const Reflection = require('../models/reflection');
-const User = require('../models/user');
 const { cloudinary, upload } = require('../config/cloudinary');
 
+// Create a new Artifact
 router.post('/', upload.single('file'), async (req, res) => {
     try {
-        console.log("--- DEBUG: POST MEMORY ---");
-        console.log("1. req.body (Text fields):", req.body);
-        console.log("2. req.file (Cloudinary result):", req.file);
-
-        const memoryData = { ...req.body };
-        memoryData.user = req.user._id;
+        const memoryData = { 
+            ...req.body,
+            user: req.user._id 
+        };
 
         if (req.file) {
-            memoryData.contentUrl = req.file.path;
-            memoryData.cloudinaryPublicId = req.file.filename;
-            console.log("3. Mapping successful. contentUrl is:", memoryData.contentUrl);
-        } else {
-            console.warn("3. WARNING: No file received by the controller!");
+            memoryData.contentUrl = req.file.path || req.file.secure_url || req.file.url;
+            memoryData.cloudinaryPublicId = req.file.filename || req.file.public_id;
         }
 
-        if (memoryData.type !== 'Text' && memoryData.type !== 'Link' && !memoryData.contentUrl) {
-            console.error("4. ERROR: Validation will fail because contentUrl is missing for media type.");
-            return res.status(400).json({ err: "Memory validation failed: contentUrl is required." });
+        if (memoryData.type !== 'Text' && !memoryData.contentUrl) {
+            return res.status(400).json({ err: "Media artifacts require a file upload." });
         }
 
         const memory = await Memory.create(memoryData);
-        console.log("5. SUCCESS: Memory created in DB");
         res.status(201).json(memory);
     } catch (error) {
-        console.error("X. CATCH ERROR:", error.message);
-        res.status(500).json({ err: error.message });
+        res.status(400).json({ err: error.message });
     }
 });
 
+// Get all Artifacts for a specific life phase
 router.get('/phase/:phaseId', async (req, res) => {
     try {
-        const user = await User.findById(req.user._id);
-
         const memories = await Memory.find({
             phase: req.params.phaseId,
             user: req.user._id
@@ -51,19 +42,20 @@ router.get('/phase/:phaseId', async (req, res) => {
     }
 });
 
+// Get a single Artifact
 router.get('/:id', async (req, res) => {
     try {
         const memory = await Memory.findById(req.params.id);
         if (!memory || !memory.user.equals(req.user._id)) {
             return res.status(404).json({ err: 'Artifact not found.' });
         }
-        
         res.status(200).json(memory);
     } catch (error) {
         res.status(500).json({ err: error.message });
     }
 });
 
+// Update an Artifact (and replace image if new one provided)
 router.put('/:id', upload.single('file'), async (req, res) => {
     try {
         const memory = await Memory.findById(req.params.id);
@@ -77,8 +69,8 @@ router.put('/:id', upload.single('file'), async (req, res) => {
             if (memory.cloudinaryPublicId) {
                 await cloudinary.uploader.destroy(memory.cloudinaryPublicId);
             }
-            updateData.contentUrl = req.file.path;
-            updateData.cloudinaryPublicId = req.file.filename;
+            updateData.contentUrl = req.file.path || req.file.secure_url || req.file.url;
+            updateData.cloudinaryPublicId = req.file.filename || req.file.public_id;
         }
 
         const updatedMemory = await Memory.findByIdAndUpdate(
@@ -92,12 +84,15 @@ router.put('/:id', upload.single('file'), async (req, res) => {
     }
 });
 
+// Remove an Artifact and its associated reflections
 router.delete('/:id', async (req, res) => {
     try {
         const memory = await Memory.findById(req.params.id);
         if (!memory || !memory.user.equals(req.user._id)) {
             return res.status(403).json({ err: "Unauthorized removal." });
         }
+
+        // Clean up linked reflections and Cloudinary assets
         await Reflection.deleteMany({ memory: req.params.id });
         if (memory.cloudinaryPublicId) {
             await cloudinary.uploader.destroy(memory.cloudinaryPublicId);

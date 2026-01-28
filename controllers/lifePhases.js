@@ -29,7 +29,7 @@ router.put('/:id', async (req, res) => {
     try {
         const lifePhase = await LifePhase.findById(req.params.id);
 
-        if (!lifePhase) return res.status(404).json({ err: 'Room not found.' });
+        if (!lifePhase) return res.status(404).json({ err: 'Life Phase not found.' });
         if (!lifePhase.user.equals(req.user._id)) {
             return res.status(403).json({ err: "Unauthorized renovation request." });
         }

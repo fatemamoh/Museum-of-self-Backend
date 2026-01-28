@@ -4,7 +4,7 @@ const memorySchema = new mongoose.Schema({
 
     title: {
         type: String,
-        required: [true, 'Every artifact needs a title for the muesum catalog'],
+        required: [true, 'Every artifact needs a title for the museum catalog'],
         trim: true
     },
 
@@ -21,7 +21,8 @@ const memorySchema = new mongoose.Schema({
     },
     contentUrl: {
         type: String,
-        required: function () { return this.type !== 'Text' }
+        required:false
+        // required: function () { return this.type !== 'Text' }
     },
 
     cloudinaryPublicId: {
@@ -61,7 +62,7 @@ const memorySchema = new mongoose.Schema({
 
     capturedDate: {
         type: Date,
-        required: [true, "The date of this occurrece is required for the timeline"]
+        required: [true, "The date of this occurrence is required for the timeline"]
     },
 
     phase: {
