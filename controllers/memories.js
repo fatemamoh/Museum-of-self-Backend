@@ -105,4 +105,14 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
+router.get('/', async (req, res) => {
+    try {
+        const memories = await Memory.find({ user: req.user._id })
+            .sort({ createdAt: -1 }); 
+        res.status(200).json(memories);
+    } catch (error) {
+        res.status(500).json({ err: error.message });
+    }
+});
+
 module.exports = router;

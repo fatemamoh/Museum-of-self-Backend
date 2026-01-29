@@ -10,6 +10,10 @@ const storage = new CloudinaryStorage({
     folder: 'museum_of_self', 
     allowed_formats: ['jpg', 'png', 'jpeg', 'mp4', 'mp3'], 
     resource_type: 'auto', 
+    transformation: [
+            { width: 800, height: 800, crop: "fill", gravity: "auto" }, 
+            { quality: "auto" },           
+            { fetch_format: "auto" }]
   },
 });
 
