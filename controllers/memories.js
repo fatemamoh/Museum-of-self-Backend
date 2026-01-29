@@ -55,7 +55,7 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// Update an Artifact (and replace image if new one provided)
+// Update an Artifact 
 router.put('/:id', upload.single('file'), async (req, res) => {
     try {
         const memory = await Memory.findById(req.params.id);
@@ -92,7 +92,6 @@ router.delete('/:id', async (req, res) => {
             return res.status(403).json({ err: "Unauthorized removal." });
         }
 
-        // Clean up linked reflections and Cloudinary assets
         await Reflection.deleteMany({ memory: req.params.id });
         if (memory.cloudinaryPublicId) {
             await cloudinary.uploader.destroy(memory.cloudinaryPublicId);
